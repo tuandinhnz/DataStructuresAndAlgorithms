@@ -1,6 +1,6 @@
 namespace BinarySearchTree
 {
-    public class BinaryNode<TItem>
+    public class BinaryNode<TItem> where TItem : INodeItem
     {
         public TItem Item { get; set; }
         public BinaryNode<TItem>? Left { get; set; }
@@ -11,65 +11,158 @@ namespace BinarySearchTree
             Item = item;
         }
         
-        public static void SubTree_Iter(BinaryNode<TItem> node)
+        public void SubTree_Iter()
         {
-            if (node.Left != null)
+            if (Left != null)
             {
-                SubTree_Iter(node.Left);
+                Left.SubTree_Iter();
             }
-            Console.Write($"{node.Item} ");
-            if (node.Right != null)
+            
+            Console.Write($"{Item.Key} ");
+            
+            if (Right != null)
             {
-                SubTree_Iter(node.Right);
+                Right.SubTree_Iter();
             }
         }
-        public static void SubTree_InsertBefore(BinaryNode<TItem> node, BinaryNode<TItem> insertedNode)
+        
+        public BinaryNode<TItem> SubTree_First()
         {
-            if (node.Left != null)
+            if (Left != null)
             {
-                var nodePredecessor = SubTree_Last(node.Left);
+                return Left.SubTree_First();
+            }
+
+            return this;
+        }
+        
+        public BinaryNode<TItem> SubTree_Last()
+        {
+            if (Right != null)
+            {
+                return Right.SubTree_Last();
+            }
+
+            return this;
+        }
+        public void SubTree_InsertBefore(BinaryNode<TItem> insertedNode)
+        {
+            if (Left != null)
+            {
+                var nodePredecessor = Left.SubTree_Last();
                 nodePredecessor.Right = insertedNode;
                 insertedNode.Parent = nodePredecessor;
             }
             else
             {
-                node.Left = insertedNode;
-                insertedNode.Parent = node;
+                Left = insertedNode;
+                insertedNode.Parent = this;
             }
         }
-        public static void SubTree_InsertAfter(BinaryNode<TItem> node, BinaryNode<TItem> insertedNode)
+        public void SubTree_InsertAfter(BinaryNode<TItem> insertedNode)
         {
-            if (node.Right != null)
+            if (Right != null)
             {
-                var nodeSuccessor = SubTree_First(node.Right);
+                var nodeSuccessor = Right.SubTree_First();
                 nodeSuccessor.Left = insertedNode;
                 insertedNode.Parent = nodeSuccessor;
             }
             else
             {
-                node.Right = insertedNode;
-                insertedNode.Parent = node;
+                Right = insertedNode;
+                insertedNode.Parent = this;
             }
         }
 
-        public static BinaryNode<TItem> SubTree_First(BinaryNode<TItem> node)
+        public BinaryNode<TItem> GetSuccessor()
         {
-            if (node.Left != null)
+            if (Right != null)
             {
-                return SubTree_First(node.Left);
+                return Right.SubTree_First();
             }
 
-            return node;
+            var node = this;
+            
+            while (node.Parent != null && node == node.Parent.Right)
+            {
+                node = node.Parent;
+            }
+
+            return node.Parent;
         }
         
-        public static BinaryNode<TItem> SubTree_Last(BinaryNode<TItem> node)
+        public BinaryNode<TItem> GetPredecessor()
         {
-            if (node.Right != null)
+            if (Left != null)
             {
-                return SubTree_Last(node.Right);
+                return Left.SubTree_Last();
             }
 
-            return node;
+            var node = this;
+            
+            while (node.Parent != null && node == node.Parent.Left)
+            {
+                node = node.Parent;
+            }
+
+            return node.Parent;
+        }
+        
+        public BinaryNode<TItem> SubTree_Delete()
+        {
+            BinaryNode<TItem> nodeToSwap;
+            
+            if (Left != null || Right != null)
+            {
+                if (Left != null)
+                {
+                    nodeToSwap = GetPredecessor();
+                }
+                else
+                {
+                    nodeToSwap = GetSuccessor();
+                }
+
+                (Item, nodeToSwap.Item) = (nodeToSwap.Item, Item);
+
+                return nodeToSwap.SubTree_Delete();
+            }
+            
+            if (Parent != null)
+            {
+                if (Parent.Left == this)
+                {
+                    Parent.Left = null;
+                }
+
+                Parent.Right = null;
+            }
+
+            return this;
+        }
+
+        public BinaryNode<TItem>? SubTree_Find(int key)
+        {
+            if (key < Item.Key)
+            {
+                if (Left != null)
+                {
+                    return Left.SubTree_Find(key);
+                }
+            } 
+            else if (key > Item.Key)
+            {
+                if (Right != null)
+                {
+                    return Right.SubTree_Find(key);
+                }
+            }
+            else
+            {
+                return this;
+            }
+            
+            return null;
         }
     }
 }
